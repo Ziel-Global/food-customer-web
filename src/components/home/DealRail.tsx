@@ -9,7 +9,8 @@ export function DealRail({ onSelectRestaurant }: DealRailProps) {
   return (
     <section className="feed-section">
       <SectionHead eyebrow="TODAY" title="Hot deals" />
-      <div className="rail">
+      <div className="rail-bleed">
+        <div className="rail">
         {deals.map((deal) => {
           const restaurant = getRestaurant(deal.restaurantId);
           return (
@@ -28,6 +29,7 @@ export function DealRail({ onSelectRestaurant }: DealRailProps) {
             </button>
           );
         })}
+        </div>
       </div>
     </section>
   );

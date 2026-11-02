@@ -17,10 +17,12 @@ export function DishRail({ eyebrow, title, dishes, onAdd, actionLabel, onAction 
   return (
     <section className="feed-section">
       <SectionHead eyebrow={eyebrow} title={title} actionLabel={actionLabel} onAction={onAction} />
-      <div className="rail dish-rail">
+      <div className="rail-bleed">
+        <div className="rail dish-rail">
         {dishes.map((item) => (
           <DishCard key={item.id} item={item} onAdd={onAdd} variant="rail" />
         ))}
+        </div>
       </div>
     </section>
   );

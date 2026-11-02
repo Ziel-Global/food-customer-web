@@ -28,7 +28,8 @@ export function RestaurantRail({
   return (
     <section className="feed-section">
       <SectionHead eyebrow={eyebrow} title={title} actionLabel={actionLabel} onAction={onAction} />
-      <div className="rail restaurant-rail">
+      <div className="rail-bleed">
+        <div className="rail restaurant-rail">
         {restaurants.map((restaurant) => (
           <RestaurantCard
             key={restaurant.id}
@@ -39,6 +40,7 @@ export function RestaurantRail({
             variant="rail"
           />
         ))}
+        </div>
       </div>
     </section>
   );
