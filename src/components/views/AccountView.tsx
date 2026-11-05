@@ -1,36 +1,50 @@
+import { displayName, userInitials, type AuthUser } from "@/lib/auth";
+
 type AccountViewProps = {
+  user: AuthUser;
   address: string;
   favoritesCount: number;
   hasOrders: boolean;
+  activeOrderCount?: number;
   onEditAddress: () => void;
   onToast: (message: string) => void;
   onOpenFavorites: () => void;
   onOpenOrders: () => void;
+  onLogout: () => void;
 };
 
 export function AccountView({
+  user,
   address,
   favoritesCount,
   hasOrders,
+  activeOrderCount = 0,
   onEditAddress,
   onToast,
   onOpenFavorites,
   onOpenOrders,
+  onLogout,
 }: AccountViewProps) {
+  function handleLogout() {
+    if (window.confirm("Sign out of Crave? You’ll need to log in again to order.")) {
+      onLogout();
+    }
+  }
+
   return (
     <div className="account-page">
       <section className="account-hero">
         <div className="account-hero-main">
           <div className="account-avatar" aria-hidden="true">
-            A
+            {userInitials(user)}
           </div>
           <div className="account-hero-copy">
             <p className="eyebrow">YOUR ACCOUNT</p>
-            <h1>Alex Mercer</h1>
-            <p className="account-email">alex@crave.example</p>
+            <h1>{displayName(user)}</h1>
+            <p className="account-email">{user.email}</p>
             <div className="account-badges">
               <span className="account-badge">Crave Member</span>
-              <span className="account-badge soft">Since 2024</span>
+              <span className="account-badge soft">Since {user.memberSince}</span>
             </div>
           </div>
         </div>
@@ -46,13 +60,13 @@ export function AccountView({
       <section className="account-summary" aria-label="Account summary">
         <button type="button" className="account-summary-card" onClick={onOpenOrders}>
           <small>Orders</small>
-          <b>{hasOrders ? "1 active" : "None yet"}</b>
+          <b>{hasOrders ? `${activeOrderCount} active` : "None yet"}</b>
           <span>{hasOrders ? "Track your latest order" : "Start something delicious"}</span>
         </button>
         <button type="button" className="account-summary-card" onClick={onOpenFavorites}>
           <small>Saved</small>
           <b>
-            {favoritesCount} place{favoritesCount === 1 ? "" : "s"}
+            {favoritesCount} item{favoritesCount === 1 ? "" : "s"}
           </b>
           <span>{favoritesCount ? "Jump back into favorites" : "Heart spots you love"}</span>
         </button>
@@ -138,10 +152,12 @@ export function AccountView({
       </section>
 
       <div className="account-footer-actions">
-        <button type="button" className="account-signout" onClick={() => onToast("You’re signed out of this demo")}>
-          Sign out
+        <button type="button" className="account-signout" onClick={handleLogout}>
+          Log out
         </button>
-        <p>Crave demo account · alex@crave.example</p>
+        <p>
+          Signed in as {user.email}
+        </p>
       </div>
     </div>
   );

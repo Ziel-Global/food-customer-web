@@ -408,6 +408,60 @@ export function getRestaurant(id?: string) {
   return restaurants.find((item) => item.id === id) ?? restaurants[0];
 }
 
+export type PastOrder = {
+  id: string;
+  restaurantName: string;
+  itemSummary: string;
+  date: string;
+  total: number;
+  status: "Delivered" | "Cancelled";
+  image: string;
+  color: string;
+};
+
+export const pastOrders: PastOrder[] = [
+  {
+    id: "CR-2039",
+    restaurantName: "Crave",
+    itemSummary: "Quinoa Bowl · Asparagus",
+    date: "Yesterday · 6:42 PM",
+    total: 38,
+    status: "Delivered",
+    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
+    color: "#E7F2DF",
+  },
+  {
+    id: "CR-2031",
+    restaurantName: "Crave",
+    itemSummary: "Peach Bowl",
+    date: "Mon · 1:18 PM",
+    total: 16,
+    status: "Delivered",
+    image: "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=800&q=80",
+    color: "#F8E8D8",
+  },
+  {
+    id: "CR-2024",
+    restaurantName: "Harbor Kitchen",
+    itemSummary: "Classic Burger · Fries",
+    date: "Sat · 8:05 PM",
+    total: 24.5,
+    status: "Delivered",
+    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80",
+    color: "#F8D9B8",
+  },
+  {
+    id: "CR-2018",
+    restaurantName: "Sugar Cloud",
+    itemSummary: "Assorted desserts",
+    date: "Fri · 9:20 PM",
+    total: 19.75,
+    status: "Delivered",
+    image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&q=80",
+    color: "#F3E4F0",
+  },
+];
+
 export type AddonOption = {
   id: string;
   name: string;

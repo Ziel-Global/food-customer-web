@@ -22,10 +22,13 @@ export { DishRail } from "@/components/home/DishRail";
 export { HomeFeed } from "@/components/home/HomeFeed";
 
 export { OrdersView } from "@/components/views/OrdersView";
+export { OrderTrackingView } from "@/components/orders/OrderTrackingView";
+export { CourierChatView } from "@/components/orders/CourierChatView";
 export { FavoritesView } from "@/components/views/FavoritesView";
 export { AccountView } from "@/components/views/AccountView";
 export { RestaurantView } from "@/components/views/RestaurantView";
 
+export { LoginScreen } from "@/components/auth/LoginScreen";
 export { CartDrawer } from "@/components/cart/CartDrawer";
 export { CheckoutModal } from "@/components/cart/CheckoutModal";
 export { CustomizeItemModal } from "@/components/cart/CustomizeItemModal";

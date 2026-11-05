@@ -8,9 +8,28 @@ type SidebarProps = {
   hasNewOrder: boolean;
   onNavigate: (name: NavItem) => void;
   onExplore: () => void;
+  onLogout: () => void;
 };
 
-export function Sidebar({ active, hasNewOrder, onNavigate, onExplore }: SidebarProps) {
+function LogoutIcon() {
+  return (
+    <span aria-hidden="true" className="nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 7V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6a2 2 0 0 1-2-2v-1" />
+        <path d="M15 12H4" />
+        <path d="m7 9-3 3 3 3" />
+      </svg>
+    </span>
+  );
+}
+
+export function Sidebar({ active, hasNewOrder, onNavigate, onExplore, onLogout }: SidebarProps) {
+  function handleLogout() {
+    if (window.confirm("Sign out of Crave? You’ll need to log in again to order.")) {
+      onLogout();
+    }
+  }
+
   return (
     <aside className="sidebar">
       <p className="side-label">YOUR CRAVE</p>
@@ -27,6 +46,10 @@ export function Sidebar({ active, hasNewOrder, onNavigate, onExplore }: SidebarP
             {name === "Orders" && hasNewOrder ? <i className="new-dot" /> : null}
           </button>
         ))}
+        <button type="button" className="side-link side-logout" onClick={handleLogout}>
+          <LogoutIcon />
+          <span>Log out</span>
+        </button>
       </nav>
       <div className="side-promo">
         <div className="spark">✳</div>
@@ -45,7 +68,9 @@ export function Sidebar({ active, hasNewOrder, onNavigate, onExplore }: SidebarP
         <div className="decor decor-b">✦</div>
       </div>
       <div className="side-bottom">
-        <span className="online-dot" /> Delivering near you <b>·</b> Central City
+        <p className="side-bottom-note">
+          <span className="online-dot" /> Delivering near you
+        </p>
       </div>
     </aside>
   );

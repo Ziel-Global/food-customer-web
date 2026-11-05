@@ -5,10 +5,12 @@ type TopbarProps = {
   address: string;
   query: string;
   cartCount: number;
+  initials: string;
   onHome: () => void;
   onEditAddress: () => void;
   onQueryChange: (value: string) => void;
   onHelp: () => void;
+  onAccount: () => void;
   onCartOpen: () => void;
 };
 
@@ -16,10 +18,12 @@ export function Topbar({
   address,
   query,
   cartCount,
+  initials,
   onHome,
   onEditAddress,
   onQueryChange,
   onHelp,
+  onAccount,
   onCartOpen,
 }: TopbarProps) {
   return (
@@ -46,8 +50,8 @@ export function Topbar({
         <button className="help-button" onClick={onHelp} type="button">
           Help
         </button>
-        <button className="avatar" onClick={onHelp} type="button">
-          A
+        <button className="avatar" onClick={onAccount} type="button" aria-label="Open account">
+          {initials}
         </button>
         <BagButton count={cartCount} onClick={onCartOpen} />
       </div>

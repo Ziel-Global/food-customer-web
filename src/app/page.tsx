@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AccountView,
   AddressModal,
@@ -9,8 +9,11 @@ import {
   CustomizeItemModal,
   FavoritesView,
   HomeFeed,
+  LoginScreen,
+  CourierChatView,
   OrderSuccessModal,
   OrdersView,
+  OrderTrackingView,
   PromoBar,
   RestaurantView,
   Sidebar,
@@ -18,8 +21,13 @@ import {
   Toast,
   Topbar,
 } from "@/components";
+import { clearStoredUser, getStoredUser, storeUser, userInitials, type AuthUser } from "@/lib/auth";
 import { menuItems, restaurants } from "@/lib/data";
+import { getOrderTracking, listActiveOrders } from "@/lib/tracking";
 import type { CartLine, MenuItem, NavItem } from "@/lib/types";
+
+const DEMO_FAVORITE_RESTAURANTS = ["crave", "harbor-kitchen", "sugar-cloud", "little-olive"];
+const DEMO_FAVORITE_DISHES = ["quinoa-bowl", "asparagus", "peach-bowl", "classic-burger"];
 
 function lineUnitPrice(line: CartLine) {
   return line.item.price + line.addons.reduce((sum, addon) => sum + addon.price * addon.quantity, 0);
@@ -33,11 +41,14 @@ function sameCustomization(a: CartLine, b: Omit<CartLine, "id" | "quantity">) {
 }
 
 export default function Home() {
+  const [authReady, setAuthReady] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [active, setActive] = useState<NavItem>("Home");
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<string[]>(DEMO_FAVORITE_RESTAURANTS);
+  const [favoriteDishes, setFavoriteDishes] = useState<string[]>(DEMO_FAVORITE_DISHES);
   const [selectedRestaurant, setSelectedRestaurant] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkout, setCheckout] = useState(false);
@@ -49,6 +60,13 @@ export default function Home() {
   const [addressOpen, setAddressOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [customizing, setCustomizing] = useState<MenuItem | null>(null);
+  const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
+  const [chatOrderId, setChatOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setUser(getStoredUser());
+    setAuthReady(true);
+  }, []);
 
   const restaurant = restaurants.find((r) => r.id === selectedRestaurant);
   const count = cart.reduce((sum, line) => sum + line.quantity, 0);
@@ -130,9 +148,82 @@ export default function Home() {
     setFavorites((current) => (current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id]));
   }
 
+  function toggleFavoriteDish(id: string) {
+    setFavoriteDishes((current) =>
+      current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id],
+    );
+  }
+
+  const activeOrderCount = listActiveOrders(placed ? lastOrderId : null).length;
+
   function goHome() {
     setActive("Home");
     setSelectedRestaurant(null);
+  }
+
+  function openOrderTracking(orderId: string) {
+    setTrackingOrderId(orderId);
+  }
+
+  function reorderFromOrder(orderId: string) {
+    const snapshot = getOrderTracking(orderId, lastOrderId);
+    const items = snapshot.reorderItemIds
+      .map((id) => menuItems.find((item) => item.id === id))
+      .filter((item): item is MenuItem => Boolean(item));
+
+    if (!items.length) {
+      showToast("Nothing to reorder from this order");
+      return;
+    }
+
+    const restaurantId = items[0].restaurantId;
+    const existingRestaurant = cart[0]?.item.restaurantId;
+    if (existingRestaurant && existingRestaurant !== restaurantId) {
+      if (!window.confirm("Your cart has items from another restaurant. Clear it and reorder?")) return;
+    }
+
+    const lines: CartLine[] = items.map((item) => ({
+      id: `${item.id}-reorder-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      item,
+      quantity: 1,
+      addons: [],
+      note: "",
+    }));
+
+    setCart((current) => {
+      if (current[0] && current[0].item.restaurantId !== restaurantId) return lines;
+      return [...current, ...lines];
+    });
+    setTrackingOrderId(null);
+    setCartOpen(true);
+    setActive("Orders");
+    showToast(`Reordered from ${snapshot.restaurantName}`);
+  }
+
+  function handleLogin(next: AuthUser) {
+    storeUser(next);
+    setUser(next);
+    setActive("Home");
+    showToast(`Welcome back, ${next.firstName}`);
+  }
+
+  function handleLogout() {
+    clearStoredUser();
+    setUser(null);
+    setCart([]);
+    setFavorites(DEMO_FAVORITE_RESTAURANTS);
+    setFavoriteDishes(DEMO_FAVORITE_DISHES);
+    setSelectedRestaurant(null);
+    setCartOpen(false);
+    setCheckout(false);
+    setOrderSuccess(false);
+    setPlaced(false);
+    setTrackingOrderId(null);
+    setChatOrderId(null);
+    setActive("Home");
+    setQuery("");
+    setCategory("All");
+    showToast("You’ve been logged out");
   }
 
   function handleQueryChange(value: string) {
@@ -163,6 +254,10 @@ export default function Home() {
             goHome();
             setPlaced(false);
           }}
+          onToast={showToast}
+          onOpenOrder={openOrderTracking}
+          onReorder={reorderFromOrder}
+          onChat={setChatOrderId}
         />
       );
     }
@@ -171,24 +266,31 @@ export default function Home() {
       return (
         <FavoritesView
           restaurants={restaurants}
+          dishes={menuItems}
           favorites={favorites}
+          favoriteDishes={favoriteDishes}
           onSelect={setSelectedRestaurant}
           onFavorite={toggleFavorite}
+          onToggleDish={toggleFavoriteDish}
+          onAdd={openCustomize}
           onExplore={goHome}
         />
       );
     }
 
-    if (active === "Account") {
+    if (active === "Account" && user) {
       return (
         <AccountView
+          user={user}
           address={address}
-          favoritesCount={favorites.length}
-          hasOrders={placed}
+          favoritesCount={favorites.length + favoriteDishes.length}
+          hasOrders={activeOrderCount > 0}
+          activeOrderCount={activeOrderCount}
           onEditAddress={() => setAddressOpen(true)}
           onToast={showToast}
           onOpenFavorites={() => setActive("Favorites")}
           onOpenOrders={() => setActive("Orders")}
+          onLogout={handleLogout}
         />
       );
     }
@@ -208,6 +310,19 @@ export default function Home() {
     );
   }
 
+  if (!authReady) {
+    return <main className="login-screen" style={{ placeItems: "center" }} />;
+  }
+
+  if (!user) {
+    return (
+      <main>
+        <LoginScreen onLogin={handleLogin} />
+        <Toast message={toast} />
+      </main>
+    );
+  }
+
   return (
     <main>
       <PromoBar onCopy={() => showToast("Code copied — CRAVEFIRST")} />
@@ -215,10 +330,12 @@ export default function Home() {
         address={address}
         query={query}
         cartCount={count}
+        initials={userInitials(user)}
         onHome={goHome}
         onEditAddress={() => setAddressOpen(true)}
         onQueryChange={handleQueryChange}
         onHelp={() => setActive("Account")}
+        onAccount={() => setActive("Account")}
         onCartOpen={() => setCartOpen(true)}
       />
       <div className="layout">
@@ -233,6 +350,7 @@ export default function Home() {
             goHome();
             setCategory("All");
           }}
+          onLogout={handleLogout}
         />
         <section className="content">{renderContent()}</section>
       </div>
@@ -265,6 +383,7 @@ export default function Home() {
         onTrack={() => {
           setOrderSuccess(false);
           setActive("Orders");
+          setTrackingOrderId(lastOrderId);
         }}
         onHome={() => {
           setOrderSuccess(false);
@@ -286,6 +405,19 @@ export default function Home() {
         onClose={() => setCustomizing(null)}
         onConfirm={confirmCustomize}
       />
+      {trackingOrderId ? (
+        <OrderTrackingView
+          orderId={trackingOrderId}
+          placedOrderId={placed ? lastOrderId : null}
+          onClose={() => setTrackingOrderId(null)}
+          onReorder={reorderFromOrder}
+          onChat={setChatOrderId}
+          onSelectOrder={setTrackingOrderId}
+        />
+      ) : null}
+      {chatOrderId ? (
+        <CourierChatView orderId={chatOrderId} onClose={() => setChatOrderId(null)} />
+      ) : null}
       <Toast message={toast} />
     </main>
   );
