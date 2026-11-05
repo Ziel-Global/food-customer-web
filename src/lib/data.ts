@@ -407,3 +407,117 @@ export function getMenuItem(id?: string) {
 export function getRestaurant(id?: string) {
   return restaurants.find((item) => item.id === id) ?? restaurants[0];
 }
+
+export type AddonOption = {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+};
+
+export type AddonGroup = {
+  id: string;
+  title: string;
+  subtitle?: string;
+  required?: boolean;
+  max?: number;
+  /** When true, each option has a quantity stepper (same sauce/drink multiple times). */
+  quantity?: boolean;
+  optionMax?: number;
+  options: AddonOption[];
+};
+
+const foodAddonGroups: AddonGroup[] = [
+  {
+    id: "sauces",
+    title: "Extra sauces",
+    subtitle: "Add as many as you like · max 5 each",
+    max: 12,
+    quantity: true,
+    optionMax: 5,
+    options: [
+      { id: "garlic-aioli", name: "Garlic aioli", price: 0.75 },
+      { id: "spicy-mayo", name: "Spicy mayo", price: 0.75 },
+      { id: "bbq", name: "Smoky BBQ", price: 0.5 },
+      { id: "hot-honey", name: "Hot honey", price: 0.85 },
+      { id: "ranch", name: "House ranch", price: 0.65 },
+      { id: "tahini", name: "Lemon tahini", price: 0.8 },
+    ],
+  },
+  {
+    id: "drinks",
+    title: "Add drinks",
+    subtitle: "Same drink multiple times is fine",
+    max: 8,
+    quantity: true,
+    optionMax: 5,
+    options: [
+      { id: "sparkling", name: "Sparkling water", price: 2.5, description: "330 ml" },
+      { id: "cola", name: "Cola", price: 2.75, description: "330 ml" },
+      { id: "iced-tea", name: "Iced tea", price: 3.25, description: "Peach · 400 ml" },
+      { id: "fresh-juice", name: "Fresh orange juice", price: 4.5, description: "Pressed to order" },
+      { id: "latte", name: "Iced latte", price: 4.75, description: "Oat milk available" },
+    ],
+  },
+  {
+    id: "extras",
+    title: "Make it yours",
+    subtitle: "Bump quantities on paid extras",
+    max: 10,
+    quantity: true,
+    optionMax: 4,
+    options: [
+      { id: "extra-protein", name: "Extra protein", price: 3.5 },
+      { id: "avocado", name: "Half avocado", price: 2.25 },
+      { id: "cheese", name: "Melted cheddar", price: 1.5 },
+      { id: "fries", name: "Side of fries", price: 3.95 },
+      { id: "no-onion", name: "No onion", price: 0 },
+      { id: "cutlery", name: "Cutlery & napkins", price: 0 },
+    ],
+  },
+];
+
+const coffeeAddonGroups: AddonGroup[] = [
+  {
+    id: "milk",
+    title: "Milk",
+    subtitle: "Required",
+    required: true,
+    max: 1,
+    options: [
+      { id: "dairy", name: "Dairy milk", price: 0 },
+      { id: "oat", name: "Oat milk", price: 0.7 },
+      { id: "almond", name: "Almond milk", price: 0.7 },
+      { id: "soy", name: "Soy milk", price: 0.6 },
+    ],
+  },
+  {
+    id: "sweetness",
+    title: "Sweetness",
+    subtitle: "Optional · pick one",
+    max: 1,
+    options: [
+      { id: "no-sugar", name: "No sugar", price: 0 },
+      { id: "less-sugar", name: "Less sugar", price: 0 },
+      { id: "regular-sugar", name: "Regular sugar", price: 0 },
+      { id: "vanilla", name: "Vanilla syrup", price: 0.6 },
+      { id: "caramel", name: "Caramel syrup", price: 0.6 },
+    ],
+  },
+  {
+    id: "coffee-extras",
+    title: "Extras",
+    subtitle: "Optional",
+    max: 3,
+    options: [
+      { id: "extra-shot", name: "Extra espresso shot", price: 1.25 },
+      { id: "cold-foam", name: "Cold foam", price: 0.9 },
+      { id: "pastry", name: "Butter croissant", price: 3.5 },
+    ],
+  },
+];
+
+export function getAddonGroupsForItem(item: MenuItem): AddonGroup[] {
+  if (item.categoryIds.includes("coffee")) return coffeeAddonGroups;
+  return foodAddonGroups;
+}

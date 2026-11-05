@@ -2,10 +2,10 @@ export { AddressModal } from "@/components/ui/AddressModal";
 export { BagButton } from "@/components/ui/BagButton";
 export { BrandLogo } from "@/components/ui/BrandLogo";
 export { NavIcon } from "@/components/ui/NavIcon";
+export { PremiumSelect } from "@/components/ui/PremiumSelect";
 export { PrimaryButton } from "@/components/ui/PrimaryButton";
 export { SectionHead } from "@/components/ui/SectionHead";
 export { Toast } from "@/components/ui/Toast";
-
 export { PromoBar } from "@/components/layout/PromoBar";
 export { Topbar } from "@/components/layout/Topbar";
 export { Sidebar } from "@/components/layout/Sidebar";
@@ -28,3 +28,5 @@ export { RestaurantView } from "@/components/views/RestaurantView";
 
 export { CartDrawer } from "@/components/cart/CartDrawer";
 export { CheckoutModal } from "@/components/cart/CheckoutModal";
+export { CustomizeItemModal } from "@/components/cart/CustomizeItemModal";
+export { OrderSuccessModal } from "@/components/cart/OrderSuccessModal";

@@ -6,8 +6,10 @@ import {
   AddressModal,
   CartDrawer,
   CheckoutModal,
+  CustomizeItemModal,
   FavoritesView,
   HomeFeed,
+  OrderSuccessModal,
   OrdersView,
   PromoBar,
   RestaurantView,
@@ -19,6 +21,17 @@ import {
 import { menuItems, restaurants } from "@/lib/data";
 import type { CartLine, MenuItem, NavItem } from "@/lib/types";
 
+function lineUnitPrice(line: CartLine) {
+  return line.item.price + line.addons.reduce((sum, addon) => sum + addon.price * addon.quantity, 0);
+}
+
+function sameCustomization(a: CartLine, b: Omit<CartLine, "id" | "quantity">) {
+  if (a.item.id !== b.item.id || a.note !== b.note || a.addons.length !== b.addons.length) return false;
+  const aKeys = a.addons.map((addon) => `${addon.groupId}:${addon.id}x${addon.quantity}`).sort().join("|");
+  const bKeys = b.addons.map((addon) => `${addon.groupId}:${addon.id}x${addon.quantity}`).sort().join("|");
+  return aKeys === bKeys;
+}
+
 export default function Home() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
@@ -29,13 +42,17 @@ export default function Home() {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkout, setCheckout] = useState(false);
   const [placed, setPlaced] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [lastOrderTotal, setLastOrderTotal] = useState(0);
+  const [lastOrderId, setLastOrderId] = useState("CR-2084");
   const [address, setAddress] = useState("24 Cedar Street");
   const [addressOpen, setAddressOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const [customizing, setCustomizing] = useState<MenuItem | null>(null);
 
   const restaurant = restaurants.find((r) => r.id === selectedRestaurant);
   const count = cart.reduce((sum, line) => sum + line.quantity, 0);
-  const subtotal = cart.reduce((sum, line) => sum + line.item.price * line.quantity, 0);
+  const subtotal = cart.reduce((sum, line) => sum + lineUnitPrice(line) * line.quantity, 0);
 
   const shownRestaurants = useMemo(
     () =>
@@ -58,35 +75,55 @@ export default function Home() {
     window.setTimeout(() => setToast(""), 2200);
   }
 
-  function add(item: MenuItem) {
+  function openCustomize(item: MenuItem) {
     const existingRestaurant = cart[0]?.item.restaurantId;
     if (existingRestaurant && existingRestaurant !== item.restaurantId) {
       if (!window.confirm("Your cart has items from another restaurant. Clear it and add this item?")) return;
       setCart([]);
     }
+    setCustomizing(item);
+  }
+
+  function confirmCustomize(draft: Omit<CartLine, "id">) {
     setCart((lines) => {
-      const current = lines.find((line) => line.item.id === item.id);
-      return current
-        ? lines.map((line) => (line.item.id === item.id ? { ...line, quantity: line.quantity + 1 } : line))
-        : [...lines, { item, quantity: 1 }];
+      const match = lines.find((line) => sameCustomization(line, draft));
+      if (match) {
+        return lines.map((line) =>
+          line.id === match.id ? { ...line, quantity: line.quantity + draft.quantity } : line,
+        );
+      }
+      return [
+        ...lines,
+        {
+          ...draft,
+          id: `${draft.item.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        },
+      ];
     });
-    showToast(`${item.name} added to your bag`);
+    setCustomizing(null);
+    showToast(`${draft.item.name} added to your bag`);
   }
 
   function changeQty(id: string, delta: number) {
     setCart((lines) =>
       lines
-        .map((line) => (line.item.id === id ? { ...line, quantity: line.quantity + delta } : line))
+        .map((line) => (line.id === id ? { ...line, quantity: line.quantity + delta } : line))
         .filter((line) => line.quantity > 0),
     );
   }
 
   function placeOrder() {
+    const orderTotal = subtotal + 2.74;
+    const orderId = `CR-${2000 + Math.floor(Math.random() * 8000)}`;
+    setLastOrderTotal(orderTotal);
+    setLastOrderId(orderId);
     setCart([]);
     setCheckout(false);
     setCartOpen(false);
+    setSelectedRestaurant(null);
     setPlaced(true);
-    setActive("Orders");
+    setOrderSuccess(true);
+    showToast("Order placed successfully");
   }
 
   function toggleFavorite(id: string) {
@@ -111,7 +148,7 @@ export default function Home() {
           restaurant={restaurant}
           cartCount={count}
           onBack={() => setSelectedRestaurant(null)}
-          onAdd={add}
+          onAdd={openCustomize}
           onCart={() => setCartOpen(true)}
         />
       );
@@ -121,6 +158,7 @@ export default function Home() {
       return (
         <OrdersView
           placed={placed}
+          orderId={lastOrderId}
           onExplore={() => {
             goHome();
             setPlaced(false);
@@ -142,7 +180,17 @@ export default function Home() {
     }
 
     if (active === "Account") {
-      return <AccountView address={address} onEditAddress={() => setAddressOpen(true)} onToast={showToast} />;
+      return (
+        <AccountView
+          address={address}
+          favoritesCount={favorites.length}
+          hasOrders={placed}
+          onEditAddress={() => setAddressOpen(true)}
+          onToast={showToast}
+          onOpenFavorites={() => setActive("Favorites")}
+          onOpenOrders={() => setActive("Orders")}
+        />
+      );
     }
 
     return (
@@ -155,7 +203,7 @@ export default function Home() {
         onCategory={setCategory}
         onSelectRestaurant={setSelectedRestaurant}
         onFavorite={toggleFavorite}
-        onAdd={add}
+        onAdd={openCustomize}
       />
     );
   }
@@ -209,6 +257,20 @@ export default function Home() {
         onClose={() => setCheckout(false)}
         onPlaceOrder={placeOrder}
       />
+      <OrderSuccessModal
+        open={orderSuccess}
+        address={address}
+        total={lastOrderTotal}
+        orderId={lastOrderId}
+        onTrack={() => {
+          setOrderSuccess(false);
+          setActive("Orders");
+        }}
+        onHome={() => {
+          setOrderSuccess(false);
+          goHome();
+        }}
+      />
       <AddressModal
         open={addressOpen}
         address={address}
@@ -217,6 +279,12 @@ export default function Home() {
           setAddress(next);
           showToast(`Delivering to ${next}`);
         }}
+      />
+      <CustomizeItemModal
+        key={customizing?.id ?? "closed"}
+        item={customizing}
+        onClose={() => setCustomizing(null)}
+        onConfirm={confirmCustomize}
       />
       <Toast message={toast} />
     </main>

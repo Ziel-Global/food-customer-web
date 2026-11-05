@@ -2,15 +2,16 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 type OrdersViewProps = {
   placed: boolean;
+  orderId?: string;
   onExplore: () => void;
 };
 
-export function OrdersView({ placed, onExplore }: OrdersViewProps) {
+export function OrdersView({ placed, orderId = "CR-2084", onExplore }: OrdersViewProps) {
   return (
     <div className="page-state">
       <span className="state-icon">{placed ? "✓" : "▤"}</span>
-      <p className="eyebrow">YOUR ORDERS</p>
-      <h1>{placed ? "Order placed. Nice choice." : "Your next favorite is one order away."}</h1>
+      <p className="eyebrow">{placed ? "LIVE ORDER" : "YOUR ORDERS"}</p>
+      <h1>{placed ? "Order placed successfully" : "Your next favorite is one order away."}</h1>
       <p>
         {placed
           ? "We’ve sent your order to the restaurant. Track it as it moves from the kitchen to your door."
@@ -19,8 +20,8 @@ export function OrdersView({ placed, onExplore }: OrdersViewProps) {
       {placed ? (
         <div className="order-card">
           <div>
-            <b>Order #CR-2084</b>
-            <span className="status">● Confirmed · Preparing</span>
+            <b>{orderId}</b>
+            <span className="status">● Preparing now</span>
           </div>
           <p>
             Estimated arrival <b>28–35 min</b>
@@ -31,11 +32,11 @@ export function OrdersView({ placed, onExplore }: OrdersViewProps) {
             <span />
             <span />
           </div>
-          <small>Restaurant is preparing your order</small>
+          <small>Restaurant accepted your order and started preparing</small>
         </div>
       ) : null}
       <PrimaryButton onClick={onExplore}>
-        Explore restaurants <span>→</span>
+        {placed ? "Order something else" : "Explore restaurants"} <span>→</span>
       </PrimaryButton>
     </div>
   );

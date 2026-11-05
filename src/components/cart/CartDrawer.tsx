@@ -11,11 +11,19 @@ type CartDrawerProps = {
   onCheckout: () => void;
 };
 
+function lineUnitPrice(line: CartLine) {
+  return line.item.price + line.addons.reduce((sum, addon) => sum + addon.price * addon.quantity, 0);
+}
+
+function formatAddon(addon: CartLine["addons"][number]) {
+  return addon.quantity > 1 ? `${addon.name} ×${addon.quantity}` : addon.name;
+}
+
 export function CartDrawer({ open, cart, address, onClose, onChangeQty, onCheckout }: CartDrawerProps) {
   if (!open) return null;
 
   const count = cart.reduce((sum, line) => sum + line.quantity, 0);
-  const subtotal = cart.reduce((sum, line) => sum + line.item.price * line.quantity, 0);
+  const subtotal = cart.reduce((sum, line) => sum + lineUnitPrice(line) * line.quantity, 0);
   const total = subtotal + 2.74;
   const restaurant = cart.length ? restaurants.find((r) => r.id === cart[0].item.restaurantId) : null;
 
@@ -41,25 +49,32 @@ export function CartDrawer({ open, cart, address, onClose, onChangeQty, onChecko
               <span>⌖ {address}</span>
             </div>
             <div className="cart-lines">
-              {cart.map(({ item, quantity }) => (
-                <div className="cart-line" key={item.id}>
-                  <div className="cart-thumb" style={{ backgroundImage: `url(${item.image})` }} />
-                  <div className="cart-info">
-                    <b>{item.name}</b>
-                    <small>${item.price.toFixed(2)}</small>
-                    <div className="quantity">
-                      <button onClick={() => onChangeQty(item.id, -1)} type="button">
-                        −
-                      </button>
-                      <span>{quantity}</span>
-                      <button onClick={() => onChangeQty(item.id, 1)} type="button">
-                        +
-                      </button>
+              {cart.map((line) => {
+                const unit = lineUnitPrice(line);
+                return (
+                  <div className="cart-line" key={line.id}>
+                    <div className="cart-thumb" style={{ backgroundImage: `url(${line.item.image})` }} />
+                    <div className="cart-info">
+                      <b>{line.item.name}</b>
+                      {line.addons.length ? (
+                        <small className="cart-addons">{line.addons.map(formatAddon).join(" · ")}</small>
+                      ) : null}
+                      {line.note ? <small className="cart-note">“{line.note}”</small> : null}
+                      <small>${unit.toFixed(2)}</small>
+                      <div className="quantity">
+                        <button onClick={() => onChangeQty(line.id, -1)} type="button">
+                          −
+                        </button>
+                        <span>{line.quantity}</span>
+                        <button onClick={() => onChangeQty(line.id, 1)} type="button">
+                          +
+                        </button>
+                      </div>
                     </div>
+                    <strong>${(unit * line.quantity).toFixed(2)}</strong>
                   </div>
-                  <strong>${(item.price * quantity).toFixed(2)}</strong>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <button className="add-more" onClick={onClose} type="button">
               ＋ Add more items
