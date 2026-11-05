@@ -11,6 +11,8 @@ import {
   HomeFeed,
   LoginScreen,
   CourierChatView,
+  EditProfileModal,
+  SupportChatView,
   OrderSuccessModal,
   OrdersView,
   OrderTrackingView,
@@ -58,6 +60,8 @@ export default function Home() {
   const [lastOrderId, setLastOrderId] = useState("CR-2084");
   const [address, setAddress] = useState("24 Cedar Street");
   const [addressOpen, setAddressOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [customizing, setCustomizing] = useState<MenuItem | null>(null);
   const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
@@ -220,10 +224,18 @@ export default function Home() {
     setPlaced(false);
     setTrackingOrderId(null);
     setChatOrderId(null);
+    setProfileOpen(false);
+    setSupportOpen(false);
     setActive("Home");
     setQuery("");
     setCategory("All");
     showToast("You’ve been logged out");
+  }
+
+  function saveProfile(next: AuthUser) {
+    storeUser(next);
+    setUser(next);
+    showToast("Profile updated");
   }
 
   function handleQueryChange(value: string) {
@@ -287,6 +299,8 @@ export default function Home() {
           hasOrders={activeOrderCount > 0}
           activeOrderCount={activeOrderCount}
           onEditAddress={() => setAddressOpen(true)}
+          onEditProfile={() => setProfileOpen(true)}
+          onOpenSupport={() => setSupportOpen(true)}
           onToast={showToast}
           onOpenFavorites={() => setActive("Favorites")}
           onOpenOrders={() => setActive("Orders")}
@@ -334,7 +348,7 @@ export default function Home() {
         onHome={goHome}
         onEditAddress={() => setAddressOpen(true)}
         onQueryChange={handleQueryChange}
-        onHelp={() => setActive("Account")}
+        onHelp={() => setSupportOpen(true)}
         onAccount={() => setActive("Account")}
         onCartOpen={() => setCartOpen(true)}
       />
@@ -399,6 +413,15 @@ export default function Home() {
           showToast(`Delivering to ${next}`);
         }}
       />
+      {user ? (
+        <EditProfileModal
+          open={profileOpen}
+          user={user}
+          onClose={() => setProfileOpen(false)}
+          onSave={saveProfile}
+        />
+      ) : null}
+      {supportOpen ? <SupportChatView onClose={() => setSupportOpen(false)} /> : null}
       <CustomizeItemModal
         key={customizing?.id ?? "closed"}
         item={customizing}
@@ -413,6 +436,7 @@ export default function Home() {
           onReorder={reorderFromOrder}
           onChat={setChatOrderId}
           onSelectOrder={setTrackingOrderId}
+          onSupport={() => setSupportOpen(true)}
         />
       ) : null}
       {chatOrderId ? (

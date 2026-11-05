@@ -7,6 +7,8 @@ type AccountViewProps = {
   hasOrders: boolean;
   activeOrderCount?: number;
   onEditAddress: () => void;
+  onEditProfile: () => void;
+  onOpenSupport: () => void;
   onToast: (message: string) => void;
   onOpenFavorites: () => void;
   onOpenOrders: () => void;
@@ -20,6 +22,8 @@ export function AccountView({
   hasOrders,
   activeOrderCount = 0,
   onEditAddress,
+  onEditProfile,
+  onOpenSupport,
   onToast,
   onOpenFavorites,
   onOpenOrders,
@@ -48,11 +52,7 @@ export function AccountView({
             </div>
           </div>
         </div>
-        <button
-          type="button"
-          className="account-edit-profile"
-          onClick={() => onToast("Profile editing is coming soon")}
-        >
+        <button type="button" className="account-edit-profile" onClick={onEditProfile}>
           Edit profile
         </button>
       </section>
@@ -128,11 +128,7 @@ export function AccountView({
           <h2>Need a hand?</h2>
         </div>
         <div className="account-panel">
-          <button
-            type="button"
-            className="account-row"
-            onClick={() => onToast("Support is here to help — support@crave.example")}
-          >
+          <button type="button" className="account-row" onClick={onOpenSupport}>
             <span className="account-row-icon">?</span>
             <span className="account-row-copy">
               <b>Get help</b>

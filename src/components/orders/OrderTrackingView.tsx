@@ -20,6 +20,7 @@ type OrderTrackingViewProps = {
   onReorder: (orderId: string) => void;
   onChat: (orderId: string) => void;
   onSelectOrder: (orderId: string) => void;
+  onSupport?: () => void;
 };
 
 export function OrderTrackingView({
@@ -29,6 +30,7 @@ export function OrderTrackingView({
   onReorder,
   onChat,
   onSelectOrder,
+  onSupport,
 }: OrderTrackingViewProps) {
   const [mounted, setMounted] = useState(false);
   const tracking = useMemo(
@@ -144,9 +146,14 @@ export function OrderTrackingView({
         >
           #{tracking.id}
         </div>
-        <a href={`tel:${tracking.restaurantPhone}`} style={chromeBtn} aria-label="Call restaurant">
-          ☎
-        </a>
+        <button
+          type="button"
+          style={chromeBtn}
+          aria-label="Get help"
+          onClick={() => onSupport?.()}
+        >
+          ?
+        </button>
       </div>
 
       <div

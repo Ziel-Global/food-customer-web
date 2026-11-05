@@ -29,6 +29,8 @@ export { AccountView } from "@/components/views/AccountView";
 export { RestaurantView } from "@/components/views/RestaurantView";
 
 export { LoginScreen } from "@/components/auth/LoginScreen";
+export { EditProfileModal } from "@/components/auth/EditProfileModal";
+export { SupportChatView } from "@/components/auth/SupportChatView";
 export { CartDrawer } from "@/components/cart/CartDrawer";
 export { CheckoutModal } from "@/components/cart/CheckoutModal";
 export { CustomizeItemModal } from "@/components/cart/CustomizeItemModal";
